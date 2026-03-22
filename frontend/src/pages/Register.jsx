@@ -3,6 +3,29 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import { extractErrorMessage } from '../services/utils';
 
+function Field({ id, name, label, type = 'text', placeholder, autoComplete, value, onChange, error }) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1">
+        {label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        type={type}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={onChange}
+        className={`w-full px-3 py-2 border rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
+          error ? 'border-rose-400' : 'border-slate-300'
+        }`}
+        placeholder={placeholder}
+      />
+      {error && <p className="mt-1 text-rose-600 text-xs">{error}</p>}
+    </div>
+  );
+}
+
 export default function Register() {
   const { register, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -53,27 +76,6 @@ export default function Register() {
     }
   };
 
-  const Field = ({ id, name, label, type = 'text', placeholder, autoComplete }) => (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1">
-        {label}
-      </label>
-      <input
-        id={id}
-        name={name}
-        type={type}
-        autoComplete={autoComplete}
-        value={form[name]}
-        onChange={handleChange}
-        className={`w-full px-3 py-2 border rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-          errors[name] ? 'border-rose-400' : 'border-slate-300'
-        }`}
-        placeholder={placeholder}
-      />
-      {errors[name] && <p className="mt-1 text-rose-600 text-xs">{errors[name]}</p>}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -90,9 +92,9 @@ export default function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Field id="fullName" name="fullName" label="Full name" placeholder="Jane Smith" autoComplete="name" />
-            <Field id="email" name="email" label="Email address" type="email" placeholder="you@example.com" autoComplete="email" />
-            <Field id="password" name="password" label="Password" type="password" placeholder="Min. 8 characters" autoComplete="new-password" />
+            <Field id="fullName" name="fullName" label="Full name" placeholder="Jane Smith" autoComplete="name" value={form.fullName} onChange={handleChange} error={errors.fullName} />
+            <Field id="email" name="email" label="Email address" type="email" placeholder="you@example.com" autoComplete="email" value={form.email} onChange={handleChange} error={errors.email} />
+            <Field id="password" name="password" label="Password" type="password" placeholder="Min. 8 characters" autoComplete="new-password" value={form.password} onChange={handleChange} error={errors.password} />
 
             <button
               type="submit"
