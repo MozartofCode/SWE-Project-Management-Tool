@@ -216,12 +216,24 @@ const updateIssue = async (projectId, issueId, userId, updates) => {
       }
     }
 
-    if (
+    const assigneeChanged =
       sanitized.assignee_id !== undefined &&
-      sanitized.assignee_id !== currentIssue.assignee_id
-    ) {
+      sanitized.assignee_id !== currentIssue.assignee_id;
+
+    // Only override with assigned_issue if status did not already produce a more specific action
+    if (assigneeChanged && action === 'updated_issue') {
       action = 'assigned_issue';
       description = `Issue "${data.title}" was assigned`;
+    } else if (assigneeChanged && action !== 'updated_issue') {
+      // Both changed — log a second activity entry for the assignment
+      await logActivity({
+        project_id: projectId,
+        issue_id: issueId,
+        user_id: userId,
+        action: 'assigned_issue',
+        description: `Issue "${data.title}" was assigned`,
+        metadata: null,
+      });
     }
 
     await logActivity({
@@ -249,6 +261,13 @@ const deleteIssue = async (projectId, issueId, userId) => {
       throw err;
     }
 
+    // Fetch title before deletion for activity log
+    const { data: issue } = await supabaseAdmin
+      .from('issues')
+      .select('title')
+      .eq('id', issueId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('issues')
       .delete()
@@ -256,6 +275,13 @@ const deleteIssue = async (projectId, issueId, userId) => {
       .eq('project_id', projectId);
 
     if (error) throw error;
+
+    await logActivity({
+      project_id: projectId,
+      user_id: userId,
+      action: 'updated_issue',
+      description: `Issue "${issue?.title || issueId}" was deleted`,
+    });
   } catch (err) {
     throw err;
   }

@@ -112,6 +112,13 @@ const removeMember = async (projectId, requesterId, targetUserId) => {
       throw err;
     }
 
+    // Fetch removed user's name for activity log
+    const { data: removedProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name')
+      .eq('id', targetUserId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('project_members')
       .delete()
@@ -119,6 +126,13 @@ const removeMember = async (projectId, requesterId, targetUserId) => {
       .eq('user_id', targetUserId);
 
     if (error) throw error;
+
+    await logActivity({
+      project_id: projectId,
+      user_id: requesterId,
+      action: 'removed_member',
+      description: `${removedProfile?.full_name || 'A member'} was removed from the project`,
+    });
   } catch (err) {
     throw err;
   }

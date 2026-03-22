@@ -248,7 +248,7 @@ export default function ProjectDetail() {
                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${ROLE_COLORS[m.role] || 'bg-slate-100 text-slate-600'}`}>
                       {m.role}
                     </span>
-                    {(isManager || user?.id === m.user_id) && m.user_id !== user?.id && isManager && (
+                    {isManager && m.user_id !== user?.id && (
                       <button
                         onClick={() => handleRemoveMember(m.user_id)}
                         className="text-xs text-rose-500 hover:text-rose-700 transition-colors"
