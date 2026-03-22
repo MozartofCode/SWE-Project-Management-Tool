@@ -8,6 +8,11 @@ const supabaseAdmin = createClient(
       autoRefreshToken: false,
       persistSession: false,
     },
+    global: {
+      headers: {
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    },
   }
 );
 
