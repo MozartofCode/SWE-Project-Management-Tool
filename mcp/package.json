@@ -1,0 +1,20 @@
+{
+  "name": "projectflow-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for ProjectFlow — manage projects and issues from Claude Code",
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "projectflow-mcp": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -9,6 +9,7 @@ const userRoutes = require('./routes/users');
 const projectRoutes = require('./routes/projects');
 const activityRoutes = require('./routes/activity');
 const reportRoutes = require('./routes/reports');
+const apiKeysRoutes = require('./routes/apiKeys');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -23,6 +24,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // API routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth/api-keys', apiKeysRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/activity', activityRoutes);

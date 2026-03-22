@@ -10,6 +10,7 @@ import ProjectForm from './pages/ProjectForm';
 import IssueDetail from './pages/IssueDetail';
 import IssueForm from './pages/IssueForm';
 import Users from './pages/Users';
+import Settings from './pages/Settings';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/projects/:id/issues/:issueId" element={<IssueDetail />} />
             <Route path="/projects/:id/issues/:issueId/edit" element={<IssueForm />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>
 

@@ -1,4 +1,5 @@
 const { supabaseAdmin } = require('../services/supabase');
+const { verifyApiKey } = require('../services/apiKeysService');
 
 const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,6 +13,19 @@ const authenticate = async (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
+    // Personal Access Token path (MCP / integrations)
+    if (token.startsWith('pfk_')) {
+      const user = await verifyApiKey(token);
+      if (!user) {
+        return res.status(401).json({
+          error: { message: 'Invalid API key', code: 'UNAUTHORIZED' },
+        });
+      }
+      req.user = user;
+      return next();
+    }
+
+    // Supabase JWT path (browser sessions)
     const {
       data: { user },
       error,

@@ -42,4 +42,11 @@ export const clearAuthToken = () => {
   _token = null;
 };
 
+// API Key endpoints
+export const apiKeysApi = {
+  list: () => apiClient.get('/auth/api-keys'),
+  create: (name) => apiClient.post('/auth/api-keys', { name }),
+  revoke: (id) => apiClient.delete(`/auth/api-keys/${id}`),
+};
+
 export default apiClient;
