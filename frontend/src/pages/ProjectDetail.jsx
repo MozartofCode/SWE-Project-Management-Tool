@@ -8,7 +8,7 @@ import StatusBadge from '../components/StatusBadge';
 import IssueTable from '../components/IssueTable';
 import FilterBar from '../components/FilterBar';
 import ActivityFeed from '../components/ActivityFeed';
-import { formatDate, getInitials, extractErrorMessage, generateProjectMarkdown, downloadFile } from '../services/utils';
+import { formatDate, getInitials, extractErrorMessage, downloadFile } from '../services/utils';
 
 const TABS = ['Issues', 'Members', 'Activity'];
 
@@ -39,6 +39,7 @@ export default function ProjectDetail() {
   const [addMemberError, setAddMemberError] = useState('');
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   const myRole = members.find((m) => m.user_id === user?.id)?.role;
   const isManager = myRole === 'manager';
@@ -166,14 +167,27 @@ export default function ProjectDetail() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => {
-                const { content, filename } = generateProjectMarkdown(project, issues, members);
-                downloadFile(filename, content);
+              onClick={async () => {
+                setIsExporting(true);
+                try {
+                  const res = await apiClient.get(`/projects/${id}/export`);
+                  downloadFile(res.data.data.filename, res.data.data.content);
+                } catch {
+                  alert('Export failed. Make sure the Anthropic API key is configured.');
+                } finally {
+                  setIsExporting(false);
+                }
               }}
-              className="text-sm font-medium text-slate-600 hover:text-emerald-600 border border-slate-300 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-colors"
-              title="Export project as Markdown for Claude Code"
+              disabled={isExporting}
+              className="text-sm font-medium text-slate-600 hover:text-emerald-600 border border-slate-300 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              title="Export project as AI-enhanced Markdown for Claude Code"
             >
-              Export .md
+              {isExporting ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block" />
+                  Generating…
+                </span>
+              ) : 'Export .md'}
             </button>
             {(isManager || isAdmin) && (
               <Link

@@ -2,6 +2,7 @@ const express = require('express');
 const { body, param } = require('express-validator');
 
 const projectsController = require('../controllers/projectsController');
+const exportController = require('../controllers/exportController');
 const { authenticate } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const memberRoutes = require('./members');
@@ -88,6 +89,14 @@ router.delete(
   [param('id').isUUID().withMessage('Valid project ID required')],
   validate,
   projectsController.deleteProject
+);
+
+// Claude-powered markdown export
+router.get(
+  '/:id/export',
+  [param('id').isUUID().withMessage('Valid project ID required')],
+  validate,
+  exportController.exportProject
 );
 
 module.exports = router;

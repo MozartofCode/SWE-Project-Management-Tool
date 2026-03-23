@@ -2,6 +2,7 @@ const express = require('express');
 const { body, param, query } = require('express-validator');
 
 const issuesController = require('../controllers/issuesController');
+const exportController = require('../controllers/exportController');
 const validate = require('../middleware/validate');
 
 // mergeParams: true gives access to :id from parent projects router
@@ -111,6 +112,14 @@ router.delete(
   [param('issueId').isUUID().withMessage('Valid issue ID required')],
   validate,
   issuesController.deleteIssue
+);
+
+// Claude-powered markdown export
+router.get(
+  '/:issueId/export',
+  [param('issueId').isUUID().withMessage('Valid issue ID required')],
+  validate,
+  exportController.exportIssue
 );
 
 module.exports = router;
