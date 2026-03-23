@@ -65,4 +65,30 @@ const updateUser = async (id, requesterId, { full_name, avatar_url }) => {
   }
 };
 
-module.exports = { listUsers, getUserById, updateUser };
+const saveAnthropicKey = async (userId, key) => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({ anthropic_api_key: key || null, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+    if (error) throw error;
+  } catch (err) {
+    throw err;
+  }
+};
+
+const getAnthropicKeyStatus = async (userId) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .select('anthropic_api_key')
+      .eq('id', userId)
+      .single();
+    if (error) throw error;
+    return { has_anthropic_key: !!data.anthropic_api_key };
+  } catch (err) {
+    throw err;
+  }
+};
+
+module.exports = { listUsers, getUserById, updateUser, saveAnthropicKey, getAnthropicKeyStatus };

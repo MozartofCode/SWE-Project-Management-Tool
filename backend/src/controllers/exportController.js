@@ -2,13 +2,7 @@ const { generateProjectExport, generateIssueExport } = require('../services/expo
 
 async function exportProject(req, res, next) {
   try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(503).json({
-        error: { message: 'Export feature requires an Anthropic API key.', code: 'ANTHROPIC_NOT_CONFIGURED' },
-      });
-    }
-    const { id } = req.params;
-    const result = await generateProjectExport(id, req.user.id);
+    const result = await generateProjectExport(req.params.id, req.user.id);
     res.json({ data: result });
   } catch (err) {
     next(err);
@@ -17,13 +11,8 @@ async function exportProject(req, res, next) {
 
 async function exportIssue(req, res, next) {
   try {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(503).json({
-        error: { message: 'Export feature requires an Anthropic API key.', code: 'ANTHROPIC_NOT_CONFIGURED' },
-      });
-    }
     const { id: projectId, issueId } = req.params;
-    const result = await generateIssueExport(projectId, issueId);
+    const result = await generateIssueExport(projectId, issueId, req.user.id);
     res.json({ data: result });
   } catch (err) {
     next(err);

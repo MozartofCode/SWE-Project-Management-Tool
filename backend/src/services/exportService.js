@@ -1,7 +1,21 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const { supabaseAdmin } = require('./supabase');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+async function getAnthropicClient(userId) {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('anthropic_api_key')
+    .eq('id', userId)
+    .single();
+  const key = data?.anthropic_api_key || process.env.ANTHROPIC_API_KEY;
+  if (!key) {
+    const err = new Error('No Anthropic API key configured. Add one in Settings.');
+    err.status = 503;
+    err.code = 'ANTHROPIC_NOT_CONFIGURED';
+    throw err;
+  }
+  return new Anthropic({ apiKey: key });
+}
 
 async function generateProjectExport(projectId, userId) {
   // Fetch project
@@ -72,7 +86,8 @@ ${JSON.stringify(rawData, null, 2)}
 
 Output only the markdown document, no preamble.`;
 
-  const message = await client.messages.create({
+  const anthropic = await getAnthropicClient(userId);
+  const message = await anthropic.messages.create({
     model: 'claude-opus-4-6',
     max_tokens: 4096,
     messages: [{ role: 'user', content: prompt }],
@@ -85,7 +100,7 @@ Output only the markdown document, no preamble.`;
   return { content, filename };
 }
 
-async function generateIssueExport(projectId, issueId) {
+async function generateIssueExport(projectId, issueId, userId) {
   const { data: issue, error } = await supabaseAdmin
     .from('issues')
     .select('*, reporter:profiles!issues_reporter_id_fkey(full_name, email), assignee:profiles!issues_assignee_id_fkey(full_name)')
@@ -134,7 +149,8 @@ ${JSON.stringify(rawData, null, 2)}
 
 Output only the markdown document, no preamble.`;
 
-  const message = await client.messages.create({
+  const anthropic = await getAnthropicClient(userId);
+  const message = await anthropic.messages.create({
     model: 'claude-opus-4-6',
     max_tokens: 2048,
     messages: [{ role: 'user', content: prompt }],

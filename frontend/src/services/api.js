@@ -49,4 +49,11 @@ export const apiKeysApi = {
   revoke: (id) => apiClient.delete(`/auth/api-keys/${id}`),
 };
 
+// Anthropic key endpoints
+export const anthropicKeyApi = {
+  getStatus: () => apiClient.get('/users/me/anthropic-key'),
+  save: (key) => apiClient.put('/users/me/anthropic-key', { key }),
+  clear: () => apiClient.put('/users/me/anthropic-key', { key: null }),
+};
+
 export default apiClient;

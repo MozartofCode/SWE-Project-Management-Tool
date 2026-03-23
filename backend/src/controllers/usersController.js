@@ -31,4 +31,23 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-module.exports = { listUsers, getUserById, updateUser };
+const getAnthropicKeyStatus = async (req, res, next) => {
+  try {
+    const status = await usersService.getAnthropicKeyStatus(req.user.id);
+    res.status(200).json({ data: status });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const saveAnthropicKey = async (req, res, next) => {
+  try {
+    const { key } = req.body;
+    await usersService.saveAnthropicKey(req.user.id, key);
+    res.status(200).json({ data: { has_anthropic_key: !!key } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { listUsers, getUserById, updateUser, getAnthropicKeyStatus, saveAnthropicKey };

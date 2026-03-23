@@ -67,3 +67,79 @@ export function downloadFile(filename, content) {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Generate a basic markdown export for a project (no AI — instant download).
+ */
+export function generateProjectMarkdown(project, issues, members) {
+  const now = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const slug = (project.name || 'project').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const lines = [];
+
+  lines.push(`# ${project.name}`);
+  lines.push(`> Exported from ProjectFlow on ${now}`);
+  lines.push('');
+  lines.push('## Project Overview');
+  lines.push(`- **Status:** ${project.status?.replace('_', ' ')}`);
+  if (project.description) lines.push(`- **Description:** ${project.description}`);
+  if (project.start_date) lines.push(`- **Start Date:** ${formatDate(project.start_date)}`);
+  if (project.end_date) lines.push(`- **End Date:** ${formatDate(project.end_date)}`);
+  lines.push('');
+
+  if (members?.length) {
+    lines.push('## Team');
+    members.forEach((m) => {
+      lines.push(`- **${m.profiles?.full_name || 'Unknown'}** (${m.role}) — ${m.profiles?.email || ''}`);
+    });
+    lines.push('');
+  }
+
+  const groups = [
+    { label: 'Open Issues', status: 'open' },
+    { label: 'In Progress', status: 'in_progress' },
+    { label: 'Closed Issues', status: 'closed' },
+  ];
+
+  groups.forEach(({ label, status }) => {
+    const group = (issues || []).filter((i) => i.status === status);
+    if (!group.length) return;
+    lines.push(`## ${label} (${group.length})`);
+    lines.push('');
+    group.forEach((issue) => {
+      lines.push(`### [${(issue.priority || '').toUpperCase()}] ${issue.title}`);
+      lines.push('');
+      if (issue.description) { lines.push(issue.description); lines.push(''); }
+      lines.push(`- **Assignee:** ${issue.assignee?.full_name || 'Unassigned'}`);
+      lines.push(`- **Reporter:** ${issue.reporter?.full_name || '—'}`);
+      if (issue.due_date) lines.push(`- **Due:** ${formatDate(issue.due_date)}`);
+      lines.push('');
+    });
+  });
+
+  return { content: lines.join('\n'), filename: `projectflow-${slug}.md` };
+}
+
+/**
+ * Generate a basic markdown export for a single issue (no AI — instant download).
+ */
+export function generateIssueMarkdown(issue) {
+  const now = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const slug = (issue.title || 'issue').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const lines = [];
+
+  lines.push(`# ${issue.title}`);
+  lines.push(`> Exported from ProjectFlow on ${now}`);
+  lines.push('');
+  lines.push('## Overview');
+  lines.push(`- **Status:** ${issue.status?.replace('_', ' ')}`);
+  lines.push(`- **Priority:** ${issue.priority}`);
+  lines.push(`- **Reporter:** ${issue.reporter?.full_name || '—'}`);
+  lines.push(`- **Assignee:** ${issue.assignee?.full_name || 'Unassigned'}`);
+  lines.push(`- **Created:** ${formatDate(issue.created_at)}`);
+  if (issue.due_date) lines.push(`- **Due:** ${formatDate(issue.due_date)}`);
+  lines.push('');
+  lines.push('## Description');
+  lines.push(issue.description?.trim() || '_No description provided._');
+
+  return { content: lines.join('\n'), filename: `issue-${slug}.md` };
+}
+

@@ -8,7 +8,8 @@ import StatusBadge from '../components/StatusBadge';
 import IssueTable from '../components/IssueTable';
 import FilterBar from '../components/FilterBar';
 import ActivityFeed from '../components/ActivityFeed';
-import { formatDate, getInitials, extractErrorMessage, downloadFile } from '../services/utils';
+import { formatDate, getInitials, extractErrorMessage, downloadFile, generateProjectMarkdown } from '../services/utils';
+import useAnthropicKey from '../hooks/useAnthropicKey';
 
 const TABS = ['Issues', 'Members', 'Activity'];
 
@@ -40,6 +41,7 @@ export default function ProjectDetail() {
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
+  const { hasKey: hasAnthropicKey } = useAnthropicKey();
 
   const myRole = members.find((m) => m.user_id === user?.id)?.role;
   const isManager = myRole === 'manager';
@@ -166,29 +168,46 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {/* Basic export — always available */}
             <button
-              onClick={async () => {
-                setIsExporting(true);
-                try {
-                  const res = await apiClient.get(`/projects/${id}/export`);
-                  downloadFile(res.data.data.filename, res.data.data.content);
-                } catch {
-                  alert('Export failed. Make sure the Anthropic API key is configured.');
-                } finally {
-                  setIsExporting(false);
-                }
+              onClick={() => {
+                const { content, filename } = generateProjectMarkdown(project, issues, members);
+                downloadFile(filename, content);
               }}
-              disabled={isExporting}
-              className="text-sm font-medium text-slate-600 hover:text-emerald-600 border border-slate-300 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-              title="Export project as AI-enhanced Markdown for Claude Code"
+              className="text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-300 hover:border-slate-400 px-3 py-1.5 rounded-lg transition-colors"
+              title="Export project as Markdown"
             >
-              {isExporting ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block" />
-                  Generating…
-                </span>
-              ) : 'Export .md'}
+              Export .md
             </button>
+            {/* AI export — only when Anthropic key is configured */}
+            {hasAnthropicKey && (
+              <button
+                onClick={async () => {
+                  setIsExporting(true);
+                  try {
+                    const res = await apiClient.get(`/projects/${id}/export`);
+                    downloadFile(res.data.data.filename, res.data.data.content);
+                  } catch {
+                    alert('AI export failed. Check your Anthropic API key in Settings.');
+                  } finally {
+                    setIsExporting(false);
+                  }
+                }}
+                disabled={isExporting}
+                className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 text-white shadow-sm"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }}
+                title="Export project as AI-enhanced Markdown for Claude Code"
+              >
+                {isExporting ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                    Generating…
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">✦ AI Export</span>
+                )}
+              </button>
+            )}
             {(isManager || isAdmin) && (
               <Link
                 to={`/projects/${id}/edit`}

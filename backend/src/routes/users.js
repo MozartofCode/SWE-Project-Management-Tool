@@ -39,4 +39,13 @@ router.put(
   usersController.updateUser
 );
 
+// Anthropic API key (stored per-user, never returned to frontend)
+router.get('/me/anthropic-key', usersController.getAnthropicKeyStatus);
+router.put(
+  '/me/anthropic-key',
+  [body('key').optional({ nullable: true }).isString()],
+  validate,
+  usersController.saveAnthropicKey
+);
+
 module.exports = router;
