@@ -7,6 +7,7 @@ const ROUTE_LABELS = {
   '/': 'Dashboard',
   '/projects': 'Projects',
   '/users': 'Users',
+  '/settings': 'Claude Connect',
 };
 
 function getPageTitle(pathname) {

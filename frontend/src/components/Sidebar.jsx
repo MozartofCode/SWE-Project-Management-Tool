@@ -66,7 +66,7 @@ export default function Sidebar() {
 
       {/* Bottom nav */}
       <div className="px-4 pb-3 border-t border-slate-700 pt-3">
-        <NavItem to="/settings" icon={<SettingsIcon />} label="Settings" />
+        <NavItem to="/settings" icon={<SettingsIcon />} label="Claude Connect" />
       </div>
 
       {/* User footer */}

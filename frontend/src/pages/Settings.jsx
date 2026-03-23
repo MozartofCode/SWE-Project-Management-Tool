@@ -311,8 +311,8 @@ export default function Settings() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-500 mt-1">Manage your account and integrations.</p>
+        <h1 className="text-2xl font-bold text-slate-900">Claude Connect</h1>
+        <p className="text-slate-500 mt-1">Connect your account to Claude and manage your integrations.</p>
       </div>
 
       {/* API Keys card */}
@@ -391,37 +391,6 @@ export default function Settings() {
 
       {/* AI Export — Anthropic key */}
       <AnthropicKeyCard />
-
-      {/* MCP setup guide */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <h2 className="text-base font-semibold text-slate-900 mb-1">Claude Code MCP Setup</h2>
-        <p className="text-sm text-slate-500 mb-4">
-          Connect ProjectFlow to Claude Code so you can manage projects and issues directly from your terminal.
-        </p>
-        <ol className="space-y-3 text-sm text-slate-700">
-          <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">1</span>
-            <span>Generate an API key above and copy it.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">2</span>
-            <div>
-              <span>Add the MCP server to your Claude Code settings with:</span>
-              <pre className="mt-2 p-3 bg-slate-900 text-green-400 rounded-lg text-xs overflow-x-auto">
-                claude mcp add projectflow
-              </pre>
-            </div>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">3</span>
-            <span>When prompted, enter the API key from step 1.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">4</span>
-            <span>Ask Claude: <em>"List my ProjectFlow projects"</em> to verify it works.</span>
-          </li>
-        </ol>
-      </div>
 
       {showModal && (
         <NewKeyModal
