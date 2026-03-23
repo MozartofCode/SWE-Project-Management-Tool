@@ -5,7 +5,7 @@ import useIssues from '../hooks/useIssues';
 import apiClient from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import PriorityBadge from '../components/PriorityBadge';
-import { formatDate, formatRelativeTime, getInitials, extractErrorMessage } from '../services/utils';
+import { formatDate, formatRelativeTime, getInitials, extractErrorMessage, generateIssueMarkdown, downloadFile } from '../services/utils';
 
 const STATUS_OPTIONS = ['open', 'in_progress', 'closed'];
 const PRIORITY_OPTIONS = ['low', 'medium', 'high', 'critical'];
@@ -119,6 +119,16 @@ export default function IssueDetail() {
             <div className="flex items-start justify-between mb-4">
               <h2 className="text-2xl font-bold text-slate-800 leading-tight">{issue.title}</h2>
               <div className="flex items-center gap-2 shrink-0 ml-4">
+                <button
+                  onClick={() => {
+                    const { content, filename } = generateIssueMarkdown(issue);
+                    downloadFile(filename, content);
+                  }}
+                  className="text-sm text-slate-500 hover:text-emerald-600 border border-slate-200 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-colors"
+                  title="Export issue as Markdown for Claude Code"
+                >
+                  Export .md
+                </button>
                 <Link
                   to={`/projects/${projectId}/issues/${issueId}/edit`}
                   className="text-sm text-slate-500 hover:text-indigo-600 border border-slate-200 hover:border-indigo-300 px-3 py-1.5 rounded-lg transition-colors"

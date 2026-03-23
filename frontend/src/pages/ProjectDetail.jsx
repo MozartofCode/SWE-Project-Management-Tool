@@ -8,7 +8,7 @@ import StatusBadge from '../components/StatusBadge';
 import IssueTable from '../components/IssueTable';
 import FilterBar from '../components/FilterBar';
 import ActivityFeed from '../components/ActivityFeed';
-import { formatDate, getInitials, extractErrorMessage } from '../services/utils';
+import { formatDate, getInitials, extractErrorMessage, generateProjectMarkdown, downloadFile } from '../services/utils';
 
 const TABS = ['Issues', 'Members', 'Activity'];
 
@@ -165,6 +165,16 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                const { content, filename } = generateProjectMarkdown(project, issues, members);
+                downloadFile(filename, content);
+              }}
+              className="text-sm font-medium text-slate-600 hover:text-emerald-600 border border-slate-300 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-colors"
+              title="Export project as Markdown for Claude Code"
+            >
+              Export .md
+            </button>
             {(isManager || isAdmin) && (
               <Link
                 to={`/projects/${id}/edit`}
