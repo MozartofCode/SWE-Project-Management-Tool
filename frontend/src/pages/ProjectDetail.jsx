@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import useProjects from '../hooks/useProjects';
@@ -43,7 +43,19 @@ export default function ProjectDetail() {
   const [users, setUsers] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
   const [showKeyModal, setShowKeyModal] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef(null);
   const { hasKey: hasAnthropicKey, setHasKey: setHasAnthropicKey } = useAnthropicKey();
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const myRole = members.find((m) => m.user_id === user?.id)?.role;
   const isManager = myRole === 'manager';
@@ -170,65 +182,93 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {/* Basic export — always available */}
-            <button
-              onClick={() => {
-                const { content, filename } = generateProjectMarkdown(project, issues, members);
-                downloadFile(filename, content);
-              }}
-              className="text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-300 hover:border-slate-400 px-3 py-1.5 rounded-lg transition-colors"
-              title="Export project as Markdown"
-            >
-              Export .md
-            </button>
-            {/* AI Export — always visible; opens key modal if not configured */}
-            <button
-              onClick={async () => {
-                if (!hasAnthropicKey) { setShowKeyModal(true); return; }
-                setIsExporting(true);
-                try {
-                  const res = await apiClient.get(`/projects/${id}/export`);
-                  downloadFile(res.data.data.filename, res.data.data.content);
-                } catch {
-                  alert('AI export failed. Check your Anthropic API key via your profile menu.');
-                } finally {
-                  setIsExporting(false);
-                }
-              }}
-              disabled={isExporting}
-              className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 text-white shadow-sm"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }}
-              title="Export project as AI-enhanced Markdown for Claude Code"
-            >
-              {isExporting ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
-                  Generating…
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5">✦ AI Export</span>
+            {/* Export dropdown */}
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                onClick={() => setShowExportMenu((v) => !v)}
+                className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 bg-white px-3 py-1.5 rounded-lg transition-colors shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export
+                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showExportMenu && (
+                <div className="absolute right-0 top-10 w-52 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-20">
+                  <button
+                    onClick={() => {
+                      const { content, filename } = generateProjectMarkdown(project, issues, members);
+                      downloadFile(filename, content);
+                      setShowExportMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2.5"
+                  >
+                    <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    <div>
+                      <p className="font-medium">Export .md</p>
+                      <p className="text-xs text-slate-400">Instant download</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setShowExportMenu(false);
+                      if (!hasAnthropicKey) { setShowKeyModal(true); return; }
+                      setIsExporting(true);
+                      try {
+                        const res = await apiClient.get(`/projects/${id}/export`);
+                        downloadFile(res.data.data.filename, res.data.data.content);
+                      } catch {
+                        alert('AI export failed. Check your Anthropic API key via your profile menu.');
+                      } finally {
+                        setIsExporting(false);
+                      }
+                    }}
+                    disabled={isExporting}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition-colors flex items-center gap-2.5 disabled:opacity-50"
+                  >
+                    <span className="text-base shrink-0" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>✦</span>
+                    <div>
+                      <p className="font-semibold" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        {isExporting ? 'Generating…' : 'AI Export'}
+                      </p>
+                      <p className="text-xs text-slate-400">Claude-powered spec</p>
+                    </div>
+                    {isExporting && <span className="ml-auto w-3.5 h-3.5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />}
+                  </button>
+                </div>
               )}
-            </button>
-            {showKeyModal && (
-              <AnthropicKeyModal
-                onClose={() => setShowKeyModal(false)}
-                onSaved={() => { setHasAnthropicKey(true); setShowKeyModal(false); }}
-              />
-            )}
+            </div>
+
             {(isManager || isAdmin) && (
               <Link
                 to={`/projects/${id}/edit`}
-                className="text-sm font-medium text-slate-600 hover:text-indigo-600 border border-slate-300 hover:border-indigo-300 px-3 py-1.5 rounded-lg transition-colors"
+                className="text-sm font-medium text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 bg-white px-3 py-1.5 rounded-lg transition-colors shadow-sm"
               >
                 Edit
               </Link>
             )}
             <Link
               to={`/projects/${id}/issues/new`}
-              className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+              className="text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
             >
-              + New Issue
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New Issue
             </Link>
+
+            {showKeyModal && (
+              <AnthropicKeyModal
+                onClose={() => setShowKeyModal(false)}
+                onSaved={() => { setHasAnthropicKey(true); setShowKeyModal(false); }}
+              />
+            )}
           </div>
         </div>
       </div>
