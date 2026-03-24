@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import { getInitials } from '../services/utils';
+import AnthropicKeyModal from './AnthropicKeyModal';
 
 const ROUTE_LABELS = {
   '/': 'Dashboard',
@@ -26,6 +27,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [showKeyModal, setShowKeyModal] = useState(false);
   const dropdownRef = useRef(null);
 
   const pageTitle = getPageTitle(location.pathname);
@@ -72,6 +74,14 @@ export default function Navbar() {
                 <p className="text-sm font-medium text-slate-800 truncate">{user.email}</p>
               </div>
               <button
+                onClick={() => { setIsOpen(false); setShowKeyModal(true); }}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+              >
+                <span className="text-violet-500 font-bold">✦</span>
+                Claude Connect
+              </button>
+              <div className="border-t border-slate-100 my-1" />
+              <button
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
               >
@@ -80,6 +90,13 @@ export default function Navbar() {
             </div>
           )}
         </div>
+      )}
+
+      {showKeyModal && (
+        <AnthropicKeyModal
+          onClose={() => setShowKeyModal(false)}
+          onSaved={() => {}}
+        />
       )}
     </header>
   );

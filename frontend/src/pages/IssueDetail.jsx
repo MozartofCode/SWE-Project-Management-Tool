@@ -7,6 +7,7 @@ import StatusBadge from '../components/StatusBadge';
 import PriorityBadge from '../components/PriorityBadge';
 import { formatDate, formatRelativeTime, getInitials, extractErrorMessage, downloadFile, generateIssueMarkdown } from '../services/utils';
 import useAnthropicKey from '../hooks/useAnthropicKey';
+import AnthropicKeyModal from '../components/AnthropicKeyModal';
 
 const STATUS_OPTIONS = ['open', 'in_progress', 'closed'];
 const PRIORITY_OPTIONS = ['low', 'medium', 'high', 'critical'];
@@ -23,7 +24,8 @@ export default function IssueDetail() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
-  const { hasKey: hasAnthropicKey } = useAnthropicKey();
+  const [showKeyModal, setShowKeyModal] = useState(false);
+  const { hasKey: hasAnthropicKey, setHasKey: setHasAnthropicKey } = useAnthropicKey();
 
   useEffect(() => {
     let cancelled = false;
@@ -133,34 +135,39 @@ export default function IssueDetail() {
                 >
                   Export .md
                 </button>
-                {/* AI export — only when Anthropic key is configured */}
-                {hasAnthropicKey && (
-                  <button
-                    onClick={async () => {
-                      setIsExporting(true);
-                      try {
-                        const res = await apiClient.get(`/projects/${projectId}/issues/${issueId}/export`);
-                        downloadFile(res.data.data.filename, res.data.data.content);
-                      } catch {
-                        alert('AI export failed. Check your Anthropic API key in Settings.');
-                      } finally {
-                        setIsExporting(false);
-                      }
-                    }}
-                    disabled={isExporting}
-                    className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 text-white shadow-sm"
-                    style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }}
-                    title="Export issue as AI-enhanced Markdown for Claude Code"
-                  >
-                    {isExporting ? (
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
-                        Generating…
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">✦ AI Export</span>
-                    )}
-                  </button>
+                {/* AI Export — always visible; opens key modal if not configured */}
+                <button
+                  onClick={async () => {
+                    if (!hasAnthropicKey) { setShowKeyModal(true); return; }
+                    setIsExporting(true);
+                    try {
+                      const res = await apiClient.get(`/projects/${projectId}/issues/${issueId}/export`);
+                      downloadFile(res.data.data.filename, res.data.data.content);
+                    } catch {
+                      alert('AI export failed. Check your Anthropic API key via your profile menu.');
+                    } finally {
+                      setIsExporting(false);
+                    }
+                  }}
+                  disabled={isExporting}
+                  className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 text-white shadow-sm"
+                  style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }}
+                  title="Export issue as AI-enhanced Markdown for Claude Code"
+                >
+                  {isExporting ? (
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                      Generating…
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">✦ AI Export</span>
+                  )}
+                </button>
+                {showKeyModal && (
+                  <AnthropicKeyModal
+                    onClose={() => setShowKeyModal(false)}
+                    onSaved={() => { setHasAnthropicKey(true); setShowKeyModal(false); }}
+                  />
                 )}
                 <Link
                   to={`/projects/${projectId}/issues/${issueId}/edit`}

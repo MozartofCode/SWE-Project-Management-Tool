@@ -10,6 +10,7 @@ import FilterBar from '../components/FilterBar';
 import ActivityFeed from '../components/ActivityFeed';
 import { formatDate, getInitials, extractErrorMessage, downloadFile, generateProjectMarkdown } from '../services/utils';
 import useAnthropicKey from '../hooks/useAnthropicKey';
+import AnthropicKeyModal from '../components/AnthropicKeyModal';
 
 const TABS = ['Issues', 'Members', 'Activity'];
 
@@ -41,7 +42,8 @@ export default function ProjectDetail() {
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
-  const { hasKey: hasAnthropicKey } = useAnthropicKey();
+  const [showKeyModal, setShowKeyModal] = useState(false);
+  const { hasKey: hasAnthropicKey, setHasKey: setHasAnthropicKey } = useAnthropicKey();
 
   const myRole = members.find((m) => m.user_id === user?.id)?.role;
   const isManager = myRole === 'manager';
@@ -179,34 +181,39 @@ export default function ProjectDetail() {
             >
               Export .md
             </button>
-            {/* AI export — only when Anthropic key is configured */}
-            {hasAnthropicKey && (
-              <button
-                onClick={async () => {
-                  setIsExporting(true);
-                  try {
-                    const res = await apiClient.get(`/projects/${id}/export`);
-                    downloadFile(res.data.data.filename, res.data.data.content);
-                  } catch {
-                    alert('AI export failed. Check your Anthropic API key in Settings.');
-                  } finally {
-                    setIsExporting(false);
-                  }
-                }}
-                disabled={isExporting}
-                className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 text-white shadow-sm"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }}
-                title="Export project as AI-enhanced Markdown for Claude Code"
-              >
-                {isExporting ? (
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
-                    Generating…
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5">✦ AI Export</span>
-                )}
-              </button>
+            {/* AI Export — always visible; opens key modal if not configured */}
+            <button
+              onClick={async () => {
+                if (!hasAnthropicKey) { setShowKeyModal(true); return; }
+                setIsExporting(true);
+                try {
+                  const res = await apiClient.get(`/projects/${id}/export`);
+                  downloadFile(res.data.data.filename, res.data.data.content);
+                } catch {
+                  alert('AI export failed. Check your Anthropic API key via your profile menu.');
+                } finally {
+                  setIsExporting(false);
+                }
+              }}
+              disabled={isExporting}
+              className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-60 text-white shadow-sm"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }}
+              title="Export project as AI-enhanced Markdown for Claude Code"
+            >
+              {isExporting ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                  Generating…
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">✦ AI Export</span>
+              )}
+            </button>
+            {showKeyModal && (
+              <AnthropicKeyModal
+                onClose={() => setShowKeyModal(false)}
+                onSaved={() => { setHasAnthropicKey(true); setShowKeyModal(false); }}
+              />
             )}
             {(isManager || isAdmin) && (
               <Link

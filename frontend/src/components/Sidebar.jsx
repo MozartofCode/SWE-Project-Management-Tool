@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
-import { getInitials } from '../services/utils';
 
 function NavItem({ to, icon, label }) {
   return (
@@ -64,25 +63,6 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* Bottom nav */}
-      <div className="px-4 pb-3 border-t border-slate-700 pt-3">
-        <NavItem to="/settings" icon={<SettingsIcon />} label="Claude Connect" />
-      </div>
-
-      {/* User footer */}
-      {user && (
-        <div className="border-t border-slate-700 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold shrink-0">
-              {getInitials(user.full_name)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-white text-sm font-medium truncate">{user.full_name}</p>
-              <p className="text-slate-400 text-xs truncate">{user.email}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </aside>
   );
 }
